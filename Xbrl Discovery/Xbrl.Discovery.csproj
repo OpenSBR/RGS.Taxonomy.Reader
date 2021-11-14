@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Entities\Bewaar\**" />
+    <Compile Remove="Entities\xs\Bewaar\**" />
+    <EmbeddedResource Remove="Entities\Bewaar\**" />
+    <EmbeddedResource Remove="Entities\xs\Bewaar\**" />
+    <None Remove="Entities\Bewaar\**" />
+    <None Remove="Entities\xs\Bewaar\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Entities\Element - Bewaar.cs" />
+    <Compile Remove="Entities\Entity - Bewaar.cs" />
+    <Compile Remove="Entities\label\LabelArc.cs" />
+    <Compile Remove="Entities\xs\Annotation - Bewaar.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RGS Mapping Model\RGS.Mapping.Model.csproj" />
+  </ItemGroup>
+
+</Project>
