@@ -1,11 +1,10 @@
 ﻿using System.Xml.Linq;
 
-namespace Xbrl.Discovery.Entities.rgs
+namespace Xbrl.Discovery.Entities.rgs22
 {
     public abstract class Dimension : xml.Element
     {
-        public virtual string QNameAttribute => Attribute(Namespaces.rgs + "qname")?.Value;
-        public virtual Container ContainerAttribute => Attribute(Namespaces.rgs + "container")?.Value;
+        public virtual string QNameAttribute => Attribute(Namespaces.rgs22 + "qname")?.Value;
         protected xs.Element _concept;
         public xs.Element Concept
         {

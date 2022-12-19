@@ -1,4 +1,4 @@
-﻿namespace Xbrl.Discovery.rgs
+﻿namespace Xbrl.Discovery.rgs15
 {
     public class Namespace
 	{
@@ -115,6 +115,6 @@
 			</xs:simpleType>
 		</xs:schema>*/
         public const string Name = @"http://www.nltaxonomie.nl/rgs/2015/xbrl/rgs-syntax-extension";
-        public const string Prefix = "rgs";
+        public const string Prefix = "rgs15";
     }
 }

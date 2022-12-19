@@ -20,9 +20,9 @@ namespace RGS.Mapping.Model
             XName = name;
         }
 
-        public static implicit operator QName(string name)
+        public static implicit operator QName?(string name)
         {
-            QName result = default;
+            QName? result = default;
             if (name != default)
             {
                 if (!name.Contains(':'))
@@ -37,7 +37,7 @@ namespace RGS.Mapping.Model
         }
         public static implicit operator string(QName name) //=> name?.XName?.ToString();
         {
-            string result = default;
+            string? result = default;
             if (name?.XName != default)
             {
                 string prefix = XmlNamespaceManager.LookupPrefix(name.XName.NamespaceName);
@@ -49,9 +49,9 @@ namespace RGS.Mapping.Model
             return result;
         }
         public static implicit operator QName(XName name) => new QName(name);
-        public static implicit operator XName(QName name) => name?.XName;
+        public static implicit operator XName?(QName name) => name?.XName;
         public static implicit operator QName(XmlQualifiedName name) => new QName(name == default || name.Name == string.Empty ? default : XName.Get(name.Name, name.Namespace));
-        public static implicit operator XmlQualifiedName(QName name) => name?.XName == default ? default : new XmlQualifiedName(name.XName.LocalName, name.XName.Namespace?.NamespaceName);
+        public static implicit operator XmlQualifiedName?(QName name) => name?.XName == default ? default : new XmlQualifiedName(name.XName.LocalName, name.XName.Namespace?.NamespaceName);
 
         public static bool operator ==(QName left, QName right) => left?.XName == right?.XName;
         public static bool operator ==(QName left, string right) => left == (QName)right;
@@ -74,13 +74,13 @@ namespace RGS.Mapping.Model
         
         public class JsonConverter : JsonConverter<QName>
         {
-            public override QName ReadJson(JsonReader reader, Type objectType, QName existingValue, bool hasExistingValue, JsonSerializer serializer)
+            public override QName ReadJson(JsonReader reader, Type objectType, QName? existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
-                return new QName(reader.Value.ToString());
+                return new QName(reader.Value?.ToString());
             }
-            public override void WriteJson(JsonWriter writer, QName value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, QName? value, JsonSerializer serializer)
             {
-                writer.WriteValue(value.ToString());
+                writer.WriteValue(value?.ToString());
             }
         }
     }

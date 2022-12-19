@@ -1,4 +1,4 @@
-﻿namespace Xbrl.Discovery.Entities.rgs
+﻿namespace Xbrl.Discovery.Entities.rgs15
 {
     public class Container : Enumeration
     {

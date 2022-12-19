@@ -32,7 +32,8 @@ namespace Xbrl.Discovery
 
         public static readonly XNamespace table = @"http://xbrl.org/2014/table";
 
-        public static readonly XNamespace rgs = @"http://www.nltaxonomie.nl/rgs/2015/xbrl/rgs-syntax-extension";
+        public static readonly XNamespace rgs15 = @"http://www.nltaxonomie.nl/rgs/2015/xbrl/rgs-syntax-extension";
+        public static readonly XNamespace rgs22 = @"http://www.nltaxonomie.nl/rgs/2022/xbrl/rgs-syntax-extension";
 
         public static Dictionary<string, XNamespace> Items { get; } = new Dictionary<string, XNamespace>();
 

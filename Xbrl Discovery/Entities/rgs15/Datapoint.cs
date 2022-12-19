@@ -1,10 +1,10 @@
 ﻿using System.Xml.Linq;
 
-namespace Xbrl.Discovery.Entities.rgs
+namespace Xbrl.Discovery.Entities.rgs15
 {
     public class Datapoint : xl.Resource
     {
-        public static new RGS.Mapping.Model.QName QName => Namespaces.rgs + "datapoint";
+        public static new RGS.Mapping.Model.QName QName => Namespaces.rgs15 + "datapoint";
 
         public Entrypoint Entrypoint { get; protected set; }
 

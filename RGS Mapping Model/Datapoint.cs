@@ -2,6 +2,6 @@
 {
     public class Datapoint
     {
-        public Primary Primary { get; set; }
+        public Primary? Primary { get; set; }
     }
 }

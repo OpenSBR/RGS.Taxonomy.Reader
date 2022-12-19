@@ -13,8 +13,6 @@ namespace Xbrl.Discovery
 {
     public class Dts : Entities.xml.Container
     {
-        public static Dts Instance { get; } = new Dts();
-
         private int DocumentsInProcess = 0;
         public int UpdateDocumentsInProgress(int factor)
         {
@@ -85,9 +83,8 @@ namespace Xbrl.Discovery
             }
         }
 
-        public Report LoadFile(string filename, bool simpleReport)
+        public void LoadFile(string filename, bool simpleReport)
         {
-            Report result = new Report();
             SimpleReport = simpleReport;
             Path = filename;
             try
@@ -99,7 +96,6 @@ namespace Xbrl.Discovery
             {
                 throw new Exception(ex.Message);
             }
-            return result;
         }
 
         public void DiscoverDocument(string filename, string role = null)
@@ -173,21 +169,20 @@ namespace Xbrl.Discovery
                     foreach (Entities.xl.ExtendedLink rgsLink in linkbase.ExtendedLinks)
                     {
                         Linkrole linkrole = new Linkrole() { Uri = rgsLink.RoleAttribute };
-                        foreach (Entities.rgs.DatapointArc datapointArc in rgsLink.Arcs.OfType<Entities.rgs.DatapointArc>())
+                        foreach (var datapointArc in rgsLink.Arcs.OfType<Entities.rgs15.DatapointArc>())
                         {
-                            Mapping mapping = new Mapping();
-
-                            Entities.rgs.Datapoint rgsFrom = datapointArc.From;
+                            var mapping = new RGS.Mapping.Model.v2015.Mapping();
+                            Entities.rgs15.Datapoint rgsFrom = datapointArc.From;
                             mapping.From = new Datapoint();
                             mapping.From.Primary = new Primary() { QName = rgsFrom.Entrypoint.Primary.QNameAttribute, Label = GetStandardLabel(rgsFrom.Entrypoint.Primary.Concept) };
                             if (!SimpleReport)
                             {
-                                foreach (Entities.rgs.ExplicitDimension rgsExplicitDimension in rgsFrom.Entrypoint.Primary.ExplicitDimensions)
+                                foreach (Entities.rgs15.ExplicitDimension rgsExplicitDimension in rgsFrom.Entrypoint.Primary.ExplicitDimensions)
                                     mapping.From.Primary.ExplicitDimensions.Add(new ExplicitDimension() { QName = rgsExplicitDimension.QNameAttribute, Label = GetStandardLabel(rgsExplicitDimension.Concept), Member = rgsExplicitDimension.MemberAttribute == default ? default : new Concept() { QName = rgsExplicitDimension.MemberAttribute, Label = GetStandardLabel(rgsExplicitDimension.Member) } });
-                                foreach (Entities.rgs.TypedDimension rgsTypedDimension in rgsFrom.Entrypoint.Primary.TypedDimensions)
+                                foreach (Entities.rgs15.TypedDimension rgsTypedDimension in rgsFrom.Entrypoint.Primary.TypedDimensions)
                                     mapping.From.Primary.TypedDimensions.Add(new TypedDimension() { QName = rgsTypedDimension.QNameAttribute, Label = GetStandardLabel(rgsTypedDimension.Concept) });
                             }
-                            Entities.rgs.Datapoint rgsTo = datapointArc.To;
+                            Entities.rgs15.Datapoint rgsTo = datapointArc.To;
                             if (Report.NtEntrypoint != default && Report.NtEntrypoint != rgsFrom.Entrypoint.URIAttribute)
                                 OnDiscoverWarning("Multiple NT entrypoints discovered. Uri {0} is ingored.", rgsFrom.Entrypoint.URIAttribute);
                             Report.NtEntrypoint = rgsFrom.Entrypoint.URIAttribute;
@@ -195,9 +190,28 @@ namespace Xbrl.Discovery
                             mapping.To.Primary = new Primary() { QName = rgsTo.Entrypoint.Primary.QNameAttribute, Label = GetStandardLabel(rgsTo.Entrypoint.Primary.Concept) };
                             if (!SimpleReport)
                             {
-                                foreach (Entities.rgs.ExplicitDimension rgsExplicitDimension in rgsTo.Entrypoint.Primary.ExplicitDimensions)
+                                foreach (Entities.rgs15.ExplicitDimension rgsExplicitDimension in rgsTo.Entrypoint.Primary.ExplicitDimensions)
                                     mapping.To.Primary.ExplicitDimensions.Add(new ExplicitDimension() { QName = rgsExplicitDimension.QNameAttribute, Label = GetStandardLabel(rgsExplicitDimension.Concept), Member = rgsExplicitDimension.MemberAttribute == default ? default : new Concept() { QName = rgsExplicitDimension.MemberAttribute, Label = GetStandardLabel(rgsExplicitDimension.Member) } });
-                                foreach (Entities.rgs.TypedDimension rgsTypedDimension in rgsTo.Entrypoint.Primary.TypedDimensions)
+                                foreach (Entities.rgs15.TypedDimension rgsTypedDimension in rgsTo.Entrypoint.Primary.TypedDimensions)
+                                    mapping.To.Primary.TypedDimensions.Add(new TypedDimension() { QName = rgsTypedDimension.QNameAttribute, Label = GetStandardLabel(rgsTypedDimension.Concept) });
+                            }
+                            linkrole.Mappings.Add(mapping);
+                        }
+                        foreach (var datapointArc in rgsLink.Arcs.OfType<Entities.gen.Arc>().Where(item=>item.ArcroleAttribute== @"http://www.nltaxonomie.nl/rgs/2022/arcrole/mapping"))
+                        {
+                            var mapping = new RGS.Mapping.Model.v2022.Mapping();
+                            Entities.link.Loc rgsFrom = (Entities.link.Loc)datapointArc.From;
+                            mapping.From = new Concept();
+                            mapping.From.QName = ((Entities.xs.Element)rgsFrom.Href.Element).NameAttribute;
+                            mapping.From.Label = GetStandardLabel((Entities.xs.Element)rgsFrom.Element);
+                            Entities.rgs22.Datapoint rgsTo = (Entities.rgs22.Datapoint)datapointArc.To;
+                            mapping.To = new Datapoint();
+                            mapping.To.Primary = new Primary() { QName = rgsTo.Primary.QNameAttribute, Label = GetStandardLabel(rgsTo.Primary.Concept) };
+                            if (!SimpleReport)
+                            {
+                                foreach (Entities.rgs22.ExplicitDimension rgsExplicitDimension in rgsTo.Primary.ExplicitDimensions)
+                                    mapping.To.Primary.ExplicitDimensions.Add(new ExplicitDimension() { QName = rgsExplicitDimension.QNameAttribute, Label = GetStandardLabel(rgsExplicitDimension.Concept), Member = rgsExplicitDimension.MemberAttribute == default ? default : new Concept() { QName = rgsExplicitDimension.MemberAttribute, Label = GetStandardLabel(rgsExplicitDimension.Member) } });
+                                foreach (Entities.rgs22.TypedDimension rgsTypedDimension in rgsTo.Primary.TypedDimensions)
                                     mapping.To.Primary.TypedDimensions.Add(new TypedDimension() { QName = rgsTypedDimension.QNameAttribute, Label = GetStandardLabel(rgsTypedDimension.Concept) });
                             }
                             linkrole.Mappings.Add(mapping);

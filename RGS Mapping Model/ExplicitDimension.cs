@@ -2,6 +2,6 @@
 {
     public class ExplicitDimension : Dimension
     {
-        public Concept Member { get; set; }
+        public Concept? Member { get; set; }
     }
 }

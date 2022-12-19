@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Xbrl.Discovery.Entities.rgs
+namespace Xbrl.Discovery.Entities.rgs22
 {
     public class Primary : xml.Element
-    {
-        public static new RGS.Mapping.Model.QName QName => Namespaces.rgs + "primary";
+	{			
+        public static new RGS.Mapping.Model.QName QName => Namespaces.rgs22 + "primary";
 
-        public virtual string QNameAttribute => Attribute(Namespaces.rgs + "qname")?.Value;
+        public virtual string QNameAttribute => Attribute(Namespaces.rgs22 + "qname")?.Value;
         protected xs.Element _concept;
         public xs.Element Concept
         {
@@ -21,7 +21,7 @@ namespace Xbrl.Discovery.Entities.rgs
         public List<ExplicitDimension> ExplicitDimensions { get; } = new List<ExplicitDimension>();
         public List<TypedDimension> TypedDimensions { get; } = new List<TypedDimension>();
 
-        public Primary(Entrypoint parent, XElement xElement) : base(parent, xElement)
+        public Primary(Datapoint parent, XElement xElement) : base(parent, xElement)
         { }
 
         public override void ProcessElement(XElement xElement)

@@ -2,7 +2,7 @@
 
 namespace Xbrl.Discovery.Entities.gen
 {
-    public class Arc : Arc<link.Loc, link.Loc>
+    public class Arc : Arc<xl.Resource, xl.Resource>
     {
         public static new RGS.Mapping.Model.QName QName => Namespaces.gen + "arc";
 
