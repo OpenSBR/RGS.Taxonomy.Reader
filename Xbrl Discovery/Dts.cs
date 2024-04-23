@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using Xbrl.Discovery.Entities;
 using RGS.Mapping.Model;
+using Xbrl.Discovery.Entities;
+
+#nullable enable
 
 namespace Xbrl.Discovery
 {
@@ -16,17 +19,19 @@ namespace Xbrl.Discovery
         private int DocumentsInProcess = 0;
         public int UpdateDocumentsInProgress(int factor)
         {
-            DocumentsInProcess += factor; 
+            DocumentsInProcess += factor;
             return DocumentsInProcess;
         }
         public static bool Cancelled { get; set; } = false;
 
-        public Dictionary<string, Entities.xml.Document> Documents { get; } = new Dictionary<string, Entities.xml.Document>();
+        public Dictionary<string, Entities.xml.Document?> Documents { get; } = new Dictionary<string, Entities.xml.Document?>();
         public Dictionary<string, Entities.xs.Schema> Schemas { get; } = new Dictionary<string, Entities.xs.Schema>();
         public Dictionary<string, Entities.link.Linkbase> Linkbases { get; } = new Dictionary<string, Entities.link.Linkbase>();
         public Dictionary<string, Entities.xs.Element> GlobalXsElements { get; } = new Dictionary<string, Entities.xs.Element>();
 
         public bool SimpleReport { get; set; }
+
+        public static string? Cache { get; set; }
 
         public string Path { get; private set; } = string.Empty;
         public string TargetNamespaceEntrypoint { get; private set; } = string.Empty;
@@ -98,16 +103,39 @@ namespace Xbrl.Discovery
             }
         }
 
-        public void DiscoverDocument(string filename, string role = null)
+        public void DiscoverDocument(string filename, string? role = null)
         {
             try
             {
                 filename = new Uri(filename).AbsoluteUri;
+                string optionalCacheFilename = filename;
+
+                // use caching if cache directory exists
+                if (Cache != null && filename.StartsWith("http"))
+                {
+                    // create cache name
+                    string localized = filename.Replace("http://", "").Replace("https://", "").Replace('/', '\\');
+                    optionalCacheFilename = System.IO.Path.Combine(Cache, localized);
+
+                    // look up in cache
+                    if (!File.Exists(optionalCacheFilename))
+                    {
+                        string dir = System.IO.Path.GetDirectoryName(optionalCacheFilename);
+                        if (!Directory.Exists(dir))
+                            Directory.CreateDirectory(dir);
+
+                        // no local copy: retrieve, store
+                        using WebClient client = new WebClient();
+                        client.DownloadFile(filename, optionalCacheFilename);
+                    }
+                }
+
                 if (!Cancelled && Documents.TryAdd(filename, value: null))
                 {
                     UpdateDocumentsInProgress(+1);
                     OnDiscoverInfo("Discovering", filename);
-                    Entities.xml.Document document = new Entities.xml.Document(this, filename);
+
+                    Entities.xml.Document document = new Entities.xml.Document(this, filename, optionalCacheFilename);
                     Documents[filename] = document;
                     if (document.XObject.Root.Name == Entities.xs.Schema.QName)
                         DiscoverSchema(document);
@@ -136,7 +164,7 @@ namespace Xbrl.Discovery
             if (!Schemas.TryAdd(document.Filename, new Entities.xs.Schema(document)))
                 throw new Exception();
         }
-        public void DiscoverLinkbase(Entities.xml.Document document, string role = null)
+        public void DiscoverLinkbase(Entities.xml.Document document, string? role = null)
         {
             if (!Linkbases.TryAdd(document.Filename, new Entities.link.Linkbase(document, role)))
                 throw new Exception();
@@ -152,7 +180,12 @@ namespace Xbrl.Discovery
                     foreach (Entities.xl.ExtendedLink extendedLink in linkbase.ExtendedLinks)
                     {
                         foreach (Entities.xl.Arc arc in extendedLink.Arcs)
-                            arc.From.Href.Element.RelatedArcs.Add(arc);
+                        {
+                            if (arc.From != null)
+                                arc.From.Href.Element.RelatedArcs.Add(arc);
+                            else
+                                OnDiscoverWarning("Building", $"Error adding arc {arc.FromAttribute} {arc.ToAttribute}");
+                        }
                     }
                 }
             }
@@ -197,7 +230,7 @@ namespace Xbrl.Discovery
                             }
                             linkrole.Mappings.Add(mapping);
                         }
-                        foreach (var datapointArc in rgsLink.Arcs.OfType<Entities.gen.Arc>().Where(item=>item.ArcroleAttribute== @"http://www.nltaxonomie.nl/rgs/2022/arcrole/mapping"))
+                        foreach (var datapointArc in rgsLink.Arcs.OfType<Entities.gen.Arc>().Where(item => item.ArcroleAttribute == @"http://www.nltaxonomie.nl/rgs/2022/arcrole/mapping"))
                         {
                             var mapping = new RGS.Mapping.Model.v2022.Mapping();
                             Entities.link.Loc rgsFrom = (Entities.link.Loc)datapointArc.From;
@@ -222,7 +255,7 @@ namespace Xbrl.Discovery
                 }
             }
         }
-        public string GetStandardLabel(Entities.xs.Element element) =>
+        public string? GetStandardLabel(Entities.xs.Element element) =>
             element.RelatedArcs.OfType<Entities.link.LabelArc>().FirstOrDefault(item => item.To.LangAttribute == "nl" && item.To.RoleAttribute == @"http://www.xbrl.org/2003/role/label")?.To.Value;
         public static string ResolveAbsoluteTargetLocation(string targetLocation, string baseLocation)
         {
@@ -238,33 +271,33 @@ namespace Xbrl.Discovery
 
         public void schemaSet_ValidationEventHandler(object sender, ValidationEventArgs e) => ValidationProblem?.Invoke(this, e);
 
-        public void OnDiscoverInfo(string action, string message, [CallerMemberName] string callerNemberName = default, [CallerFilePath] string callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
+        public void OnDiscoverInfo(string action, string message, [CallerMemberName] string? callerNemberName = default, [CallerFilePath] string? callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
             => DiscoverInfo?.Invoke(this, new ActivityEventArgs(action, message, callerNemberName, callerFilePath, callerLineNumber));
-        public void OnDiscoverWarning(string action, string message, [CallerMemberName] string callerNemberName = default, [CallerFilePath] string callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
+        public void OnDiscoverWarning(string action, string message, [CallerMemberName] string? callerNemberName = default, [CallerFilePath] string? callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
             => DiscoverWarning?.Invoke(this, new ActivityEventArgs(action, message, callerNemberName, callerFilePath, callerLineNumber));
-        public void OnDiscoverError(string action, string message, [CallerMemberName] string callerNemberName = default, [CallerFilePath] string callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
+        public void OnDiscoverError(string action, string message, [CallerMemberName] string? callerNemberName = default, [CallerFilePath] string? callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
             => DiscoverError?.Invoke(this, new ActivityEventArgs(action, message, callerNemberName, callerFilePath, callerLineNumber));
-        public void OnDiscoverReady(string action, string message, [CallerMemberName] string callerNemberName = default, [CallerFilePath] string callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
+        public void OnDiscoverReady(string action, string message, [CallerMemberName] string? callerNemberName = default, [CallerFilePath] string? callerFilePath = default, [CallerLineNumber] int callerLineNumber = default)
             => DiscoverReady?.Invoke(this, new ActivityEventArgs(action, message, callerNemberName, callerFilePath, callerLineNumber));
 
         public delegate void DtsValidationEventHandler(object sender, ValidationEventArgs e);
-        public event DtsValidationEventHandler ValidationProblem;
+        public event DtsValidationEventHandler? ValidationProblem;
 
         public delegate void DtsActivityEventHandler(object sender, ActivityEventArgs e);
-        public event DtsActivityEventHandler DiscoverInfo;
-        public event DtsActivityEventHandler DiscoverWarning;
-        public event DtsActivityEventHandler DiscoverError;
-        public event DtsActivityEventHandler DiscoverReady;
+        public event DtsActivityEventHandler? DiscoverInfo;
+        public event DtsActivityEventHandler? DiscoverWarning;
+        public event DtsActivityEventHandler? DiscoverError;
+        public event DtsActivityEventHandler? DiscoverReady;
     }
 
     public class ActivityEventArgs : EventArgs
     {
         public string Action { get; }
         public string Message { get; }
-        public string CallerMemberName { get; }
-        public string CallerFilePath { get; }
+        public string? CallerMemberName { get; }
+        public string? CallerFilePath { get; }
         public int CallerLineNumber { get; }
-        public ActivityEventArgs(string action, string message, string callerMemberName = default, string callerFilePath = default, int callerLineNumber = default)
+        public ActivityEventArgs(string action, string message, string? callerMemberName = default, string? callerFilePath = default, int callerLineNumber = default)
         {
             Action = action;
             Message = message;

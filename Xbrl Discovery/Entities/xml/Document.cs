@@ -19,5 +19,10 @@ namespace Xbrl.Discovery.Entities.xml
         {
             Filename = filename;
         }
+
+        public Document(Dts dts, string filename, string localfilename) : this(dts, XDocument.Load(localfilename))
+        {
+            Filename = filename;
+        }
     }
 }

@@ -30,6 +30,9 @@ namespace Xbrl.Discovery
         public static readonly XNamespace sev = @"http://xbrl.org/2016/assertion-severity";
         public static readonly XNamespace variable = @"http://xbrl.org/2008/variable";
 
+        public static readonly XNamespace ea = @"http://xbrl.org/2008/assertion/existence";
+        public static readonly XNamespace va = @"http://xbrl.org/2008/assertion/value";
+
         public static readonly XNamespace table = @"http://xbrl.org/2014/table";
 
         public static readonly XNamespace rgs15 = @"http://www.nltaxonomie.nl/rgs/2015/xbrl/rgs-syntax-extension";

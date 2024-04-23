@@ -42,7 +42,7 @@ namespace Xbrl.Discovery.Entities.xl
 
         public virtual string RoleAttribute => Attribute(Namespaces.xlink + "role")?.Value;
         public virtual string TitleAttribute => Attribute(Namespaces.xlink + "title")?.Value;
-        
+
         public List<link.Documentation> Documentations { get; } = new List<link.Documentation>();
         public List<Title> Titles { get; } = new List<Title>();
         public Dictionary<string, Resource> Resources { get; } = new Dictionary<string, Resource>();
@@ -62,6 +62,14 @@ namespace Xbrl.Discovery.Entities.xl
                 Titles.Add(new Title(this, xElement));
             else
                 base.ProcessElement(xElement);
+        }
+
+        public Resource GetResource(string id)
+        {
+            if (Resources.TryGetValue(id, out Resource resource))
+                return resource;
+
+            return null;
         }
     }
 

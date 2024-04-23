@@ -73,17 +73,17 @@ namespace Xbrl.Discovery.Entities.xl
             get
             {
                 if (_from == default)
-                    _from = ParentElement.Resources[FromAttribute];
+                    _from = ParentElement.GetResource(FromAttribute);
                 return _from;
             }
-        }   
+        }
         protected Resource _to;
         public Resource To
         {
             get
             {
                 if (_to == default)
-                    _to = ParentElement.Resources[ToAttribute];
+                    _to = ParentElement.GetResource(ToAttribute);
                 return _to;
             }
         }

@@ -123,7 +123,13 @@ namespace RGS.Taxonomy.Reader
 
         private void ButtonStart_Click(object sender, EventArgs e)
         {
+            string cache = @"C:\Cache";
+
             Dts = new Dts();
+
+            if (Directory.Exists(cache))
+                Dts.Cache = cache;
+
             if (buttonStart.Text == "&Start")
             {
                 try

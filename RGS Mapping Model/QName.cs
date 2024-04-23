@@ -35,7 +35,7 @@ namespace RGS.Mapping.Model
             }
             return result;
         }
-        public static implicit operator string(QName name) //=> name?.XName?.ToString();
+        public static implicit operator string?(QName name) //=> name?.XName?.ToString();
         {
             string? result = default;
             if (name?.XName != default)
@@ -68,9 +68,9 @@ namespace RGS.Mapping.Model
         public static bool operator !=(QName left, XmlQualifiedName right) => left != (QName)right;
         public static bool operator !=(XmlQualifiedName left, QName right) => (QName)left != right;
 
-        public override bool Equals(object obj) => obj is QName && obj as QName == this;
+        public override bool Equals(object obj) => obj is QName qobj && qobj == this;
         public override int GetHashCode() => base.GetHashCode();
-        public override string ToString() => this;
+        public override string? ToString() => this;
         
         public class JsonConverter : JsonConverter<QName>
         {
